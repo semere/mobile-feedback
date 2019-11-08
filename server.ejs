@@ -1,0 +1,42 @@
+var express = require('express');
+var app = express();
+var mysql = require('mysql');
+var bodyParser = require('body-parser');
+var urlencodedParser = bodyParser.urlencoded({ extended: false });
+
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({extended: false}));
+app.use('/', express.static(__dirname + '/'));
+
+var connection = mysql.createConnection({
+    host: "localhost",
+    user: "root",
+    password: "",
+    database: "book"
+});
+
+connection.connect();
+
+app.get('/', function (req, res) {
+    connection.connect();  
+    connection.query('SELECT * FROM post', function(err, rows, fields) {  
+        connection.end();
+        if (err) throw err;
+        console.log("Data displayed");
+    });
+});
+
+app.post('/', function(req, res) {
+    var username = req.body.name;
+    var usermessage = req.body.message;
+    connection.query("INSERT INTO `post` (Name, Comment) VALUES (?,?)", [username.toString(), usermessage.toString()], function(err, result) {
+        if(err) throw err;
+        //Output results
+        console.log(result.affectedRows + ' rows updated. id is ' + result.insertId);
+    });
+    res.sendFile(__dirname + '/index.html');
+});
+
+app.listen(3000, function () {
+    console.log('Connected to port 3000');
+});
